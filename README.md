@@ -1,4 +1,4 @@
-# E-Learning Computer Network
+# E-Learning——Computer Network
 
 一个基于 Flask + React 的计算机网络在线学习平台，集成了 AI 聊天机器人、智能习题练习、RAG 知识库检索、课本阅读与笔记等功能。
 
