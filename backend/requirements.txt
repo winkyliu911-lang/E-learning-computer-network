@@ -1,0 +1,40 @@
+# ==================== 核心框架 ====================
+Flask==2.3.2
+Flask-SQLAlchemy==3.0.5
+Flask-JWT-Extended==4.4.4
+Flask-CORS==4.0.0
+python-dotenv==1.0.0
+bcrypt==4.0.1
+requests==2.31.0
+werkzeug==2.3.6
+
+# ==================== LLM 和 RAG 核心 ====================
+langchain==0.0.352
+langchain-core==0.1.21
+langchain-community==0.0.20
+langchain-openai==0.0.5
+openai==1.10.0
+tiktoken==0.5.2
+
+# ==================== 文档处理 ====================
+pypdf==4.0.1
+python-docx==1.0.0
+markdown==3.5.1
+Pillow>=10.0.0
+PyMuPDF>=1.24.0
+
+# ==================== 向量数据库和嵌入 ====================
+chromadb==0.3.21
+sentence-transformers==2.6.1
+faiss-cpu==1.7.4
+
+# ==================== 数据处理 ====================
+numpy>=1.24.0
+pandas>=2.0.0
+
+# ==================== Pydantic 配置（关键）====================
+pydantic==1.10.26
+
+# ==================== 其他工具 ====================
+aiofiles>=23.0.0
+python-multipart>=0.0.6

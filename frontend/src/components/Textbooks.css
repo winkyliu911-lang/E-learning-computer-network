@@ -1,0 +1,48 @@
+.textbooks {
+  min-height: 400px;
+}
+
+.textbooks h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.category-filter {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.textbook-card {
+  transition: all 0.3s ease;
+}
+
+.textbook-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+}
+
+.textbook-cover {
+  height: 200px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.book-icon {
+  font-size: 64px;
+  color: white;
+}
+
+.textbook-content {
+  line-height: 1.8;
+}
+
+.textbook-content .content {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 4px;
+}

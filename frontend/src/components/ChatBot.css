@@ -1,0 +1,292 @@
+.chatbot {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 200px);
+  min-height: 600px;
+}
+
+.chatbot h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #e8e8e8;
+}
+
+.message {
+  margin-bottom: 16px;
+  display: flex;
+  animation: slideIn 0.3s ease-in;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message.user {
+  justify-content: flex-end;
+}
+
+.message-content {
+  max-width: 70%;
+  padding: 12px 16px;
+  border-radius: 8px;
+  word-wrap: break-word;
+  word-break: break-all;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.message.user .message-content {
+  background: #667eea;
+  color: white;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.message.bot .message-content {
+  background: white;
+  border: 1px solid #ddd;
+  color: #333;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.message-content p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.file-info {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #999;
+}
+
+.timestamp {
+  display: block;
+  font-size: 11px;
+  margin-top: 8px;
+  opacity: 0.6;
+}
+
+.chat-input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.uploaded-file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.uploaded-file-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.uploaded-file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 6px 10px;
+  border-radius: 14px;
+  background: #f0f0f0;
+  border: 1px solid #e2e2e2;
+}
+
+.uploaded-file-name {
+  font-size: 12px;
+  color: #555;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 340px;
+}
+
+.file-remove-btn {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  padding: 0;
+}
+
+.uploaded-preview-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.uploaded-preview-item {
+  position: relative;
+  display: inline-flex;
+}
+
+.uploaded-preview {
+  max-height: 120px;
+  max-width: 240px;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.preview-remove-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  padding: 0;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+}
+
+.preview-remove-btn:hover,
+.preview-remove-btn:focus {
+  background: rgba(0, 0, 0, 0.72) !important;
+  color: #fff !important;
+}
+
+.message-image-grid {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.message-image {
+  max-width: 220px;
+  max-height: 160px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ========== 输入框优化：变大变宽 ========== */
+.ant-space-compact {
+  width: 100% !important;
+  display: flex;
+  gap: 0 !important;
+}
+
+.ant-space-compact .ant-input-textarea {
+  flex: 1;
+}
+
+.ant-space-compact .ant-input-textarea-wrapper {
+  width: 100% !important;
+}
+
+.ant-space-compact .ant-input-textarea .ant-input {
+  min-height: 120px !important;
+  font-size: 14px !important;
+  padding: 12px 16px !important;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.ant-space-compact .ant-btn {
+  min-height: 120px !important;
+  font-size: 15px !important;
+  padding: 12px 24px !important;
+  white-space: normal;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ========== Bot 回复格式化样式 ========== */
+.reply-list {
+  margin: 0 0 0 0;
+  padding: 0 0 0 20px;
+  list-style: none;
+  width: 100%;
+}
+
+.reply-list li {
+  margin: 8px 0;
+  padding: 0 0 0 8px;
+  line-height: 1.6;
+  color: #333;
+  font-size: 14px;
+  position: relative;
+}
+
+.reply-list li::before {
+  content: "•";
+  position: absolute;
+  left: -12px;
+  color: #667eea;
+  font-weight: bold;
+}
+
+.reply-list li:first-child {
+  margin-top: 0;
+}
+
+.reply-list li:last-child {
+  margin-bottom: 0;
+}
+
+/* ========== 欢迎消息样式 ========== */
+.welcome-message {
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.welcome-message .message-content {
+  max-width: 70%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: black;
+  padding: 16px 20px;
+  font-size: 15px;
+  font-weight: 500;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  animation: slideInLeft 0.5s ease-out;
+  border-radius: 8px;
+  text-align: left;
+  line-height: 1.6;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.welcome-message .message-content p {
+  margin: 0;
+  font-size: 15px;
+  color: black;
+}
+
