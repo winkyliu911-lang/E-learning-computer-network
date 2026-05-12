@@ -19,7 +19,8 @@ const ChatHistory = () => {
     try {
       const response = await chatAPI.getHistory();
       console.log('📜 聊天历史记录获取成功:', response.data);
-      const records = Array.isArray(response.data) ? response.data : [];
+      const rawData = response.data;
+      const records = Array.isArray(rawData) ? rawData : (rawData.data || []);
       setSessionHistory(buildSessionList(records));
     } catch (error) {
       console.error('❌ 获取聊天历史失败:', error);

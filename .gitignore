@@ -79,3 +79,19 @@ frontend/public/计算机网络自顶向下方法原书第8版.pdf
 
 # Claude
 .claude/
+
+# Temp scripts
+create_feishu_doc.py
+fix_feishu_batch5.py
+gen_pptx.js
+modify_ppt_script.py
+inspect_slide10.py
+fix_slide10.py
+extract_notes.py
+gen_qa.py
+/read_files.py
+/package.json
+
+# Old venv
+venv_old/
+backend/venv_old/

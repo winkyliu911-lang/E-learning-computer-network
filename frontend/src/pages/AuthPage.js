@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Tabs, message, Spin } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import { authAPI } from '../api';
@@ -7,6 +8,7 @@ import './AuthPage.css';
 const AuthPage = ({ onLogin }) => {
   const [activeTab, setActiveTab] = useState('login');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleLoginSubmit = async (values) => {
     setLoading(true);
@@ -17,6 +19,7 @@ const AuthPage = ({ onLogin }) => {
       localStorage.setItem('user', JSON.stringify(response.data.user));
       message.success('登陆成功！');
       onLogin(response.data.user);
+      navigate('/knowledge');
     } catch (error) {
       message.error(error.response?.data?.error || '登陆失败');
     } finally {
@@ -42,6 +45,7 @@ const AuthPage = ({ onLogin }) => {
       localStorage.setItem('user', JSON.stringify(response.data.user));
       message.success('注册成功！');
       onLogin(response.data.user);
+      navigate('/knowledge');
     } catch (error) {
       message.error(error.response?.data?.error || '注册失败');
     } finally {

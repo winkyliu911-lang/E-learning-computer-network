@@ -1,132 +1,170 @@
 # E-Learning——Computer Network
 
-一个基于 Flask + React 的计算机网络在线学习平台，集成了 AI 聊天机器人、智能习题练习、RAG 知识库检索、课本阅读与笔记等功能。
+AI-Powered E-Learning Platform for Computer Networking Education — integrating multimodal LLM, hybrid RAG retrieval, and intelligent assessment.
 
-## 功能概览
+## Features
 
-- **AI 聊天机器人**：基于通义千问大模型，支持上传 PDF、Word、图片进行多模态问答，结合 RAG 知识库提供专业回答
-- **知识学习**：在线观看 B 站课程视频，阅读 PDF 教科书，支持分屏做笔记
-- **智能习题练习**：AI 自动生成选择题和简答题，支持章节筛选、难度选择，简答题由 AI 评分反馈
-- **练习记录**：完整的答题历史记录，统计正确率，按章节分析薄弱环节
-- **笔记系统**：阅读课本时实时记录笔记，支持搜索、编辑、按教科书筛选
-- **混合 RAG 检索**：BM25 关键词搜索 + 向量语义搜索 + RRF 融合排序，提升检索准确率
+- **AI Chatbot**: Multimodal Q&A powered by Qwen-VL-Max, supports uploading images/PDF/DOCX, RAG-augmented responses with source attribution
+- **Hybrid RAG System**: BM25 keyword search + vector semantic search + Reciprocal Rank Fusion (RRF), with query expansion and LRU caching
+- **Knowledge Base**: 17 built-in files (PDF/DOCX/Markdown) covering all networking layers; user uploads automatically indexed
+- **Smart Exercises**: AI-generated multiple choice & short answer questions across 5 chapters and 3 difficulty levels
+- **Auto Grading**: LLM-based evaluation (0-100) with feedback, key points, and explanations
+- **Knowledge Learning**: Bilibili video courses, PDF textbook reader with split-screen note-taking
+- **Note System**: Create, search, and manage notes linked to textbooks with page numbers
+- **Practice Analytics**: Per-chapter accuracy tracking, visual statistics dashboard
 
-## 技术栈
+## Tech Stack
 
-### 后端
-- Python 3.9 / Flask
-- SQLAlchemy + SQLite
-- ChromaDB 向量数据库
-- sentence-transformers 文本嵌入
-- rank_bm25 + jieba 中文分词
-- 通义千问 API（OpenAI 兼容接口）
+### Backend
+- **Framework**: Flask 2.3 with Blueprint modular architecture (7 route modules)
+- **Database**: SQLAlchemy + SQLite (6 tables), ChromaDB vector DB (HNSW, cosine)
+- **Auth**: Flask-JWT-Extended (dual token: access + refresh), bcrypt password hashing
+- **RAG**: BM25Okapi + Sentence-Transformers (MiniLM-L12-v2, 384-dim) + RRF fusion
+- **NLP**: jieba Chinese tokenization, query expansion (20+ CN-EN term mappings)
+- **LLM**: Qwen-VL-Max (multimodal chat) & Qwen-Max (exercise gen/grading) via DashScope API
+- **File Processing**: PyMuPDF (PDF→images), python-docx + Pillow (DOCX→images)
 
-### 前端
-- React 18
-- Ant Design 5 组件库
-- Axios HTTP 客户端
+### Frontend
+- **Framework**: React 18 with React Router v6
+- **UI**: Ant Design 5 component library
+- **HTTP**: Axios with JWT auto-refresh interceptors
 
-## 项目结构
+## Project Structure
 
 ```
 ├── backend/
-│   ├── app.py              # Flask 主应用，所有 API 端点
-│   ├── models.py           # 数据库模型（User, Chat, ExerciseRecord, Note）
-│   ├── rag_manager.py      # RAG 管理器（混合检索：BM25 + 向量 + RRF）
-│   ├── file_extractor.py   # 文件转换（PDF/Word 转图片）
-│   ├── config.py           # 应用配置
-│   └── requirements.txt    # Python 依赖
+│   ├── app.py                # Flask entry (~120 lines), Blueprint registration
+│   ├── config.py             # App configuration (env vars)
+│   ├── models.py             # SQLAlchemy models (User, Chat, ExerciseRecord, Note, etc.)
+│   ├── rag_manager.py        # Hybrid RAG engine (BM25 + Vector + RRF)
+│   ├── file_extractor.py     # PDF/DOCX to image conversion
+│   ├── seed_data.py          # Course data seeding from JSON
+│   ├── routes/
+│   │   ├── auth.py           # Authentication (register, login, refresh)
+│   │   ├── chat.py           # AI chat with RAG + multimodal
+│   │   ├── exercises.py      # Exercise generation & grading
+│   │   ├── rag.py            # RAG knowledge base management
+│   │   ├── videos.py         # Course video CRUD
+│   │   ├── textbooks.py      # Textbook CRUD + file serving
+│   │   └── notes.py          # Note CRUD
+│   ├── services/
+│   │   ├── llm_service.py    # LLM client (Qwen API via OpenAI compatible)
+│   │   └── logging_config.py # Logging setup
+│   ├── data/
+│   │   └── courses.json      # Course video seed data
+│   └── requirements.txt
 ├── frontend/
 │   ├── src/
-│   │   ├── api.js          # API 请求封装
+│   │   ├── App.js            # Routes + RequireAuth
+│   │   ├── api.js            # Axios API modules with JWT interceptors
+│   │   ├── index.js          # BrowserRouter entry
 │   │   ├── components/
-│   │   │   ├── ChatBot.js          # AI 聊天界面
-│   │   │   ├── KnowledgeLearning.js # 知识学习（视频、课本、笔记）
-│   │   │   ├── ExercisePractice.js  # 习题练习
-│   │   │   ├── ExerciseHistory.js   # 练习记录
-│   │   │   ├── ChatHistory.js       # 聊天历史
-│   │   │   └── CourseVideos.js      # 课程视频
+│   │   │   ├── ChatBot.js
+│   │   │   ├── KnowledgeLearning.js
+│   │   │   ├── ExercisePractice.js
+│   │   │   ├── ExerciseHistory.js
+│   │   │   ├── ChatHistory.js
+│   │   │   └── CourseVideos.js
 │   │   └── pages/
-│   │       ├── AuthPage.js      # 登录注册
-│   │       └── DashboardPage.js # 主界面布局
-│   └── public/             # PDF 教科书文件
-├── Data/                   # RAG 知识库文档（PDF、Word、Markdown）
-└── start.sh                # 一键启动脚本
+│   │       ├── AuthPage.js
+│   │       └── DashboardPage.js
+│   └── public/               # PDF textbook files
+├── Data/                     # RAG knowledge base (17 files: PDF, DOCX, Markdown)
+├── .env.example              # Environment variable template
+└── start.sh                  # Backend startup script
 ```
 
-## 快速开始
+## Quick Start
 
-### 环境要求
+### Requirements
 - Python 3.9+
 - Node.js 18+
-- Conda（推荐）
 
-### 安装步骤
+### Installation
 
-1. 克隆项目
+1. Clone
 ```bash
-git clone https://github.com/winkyliu911-lang/e-learning.git
-cd e-learning
+git clone https://github.com/winkyliu911-lang/E-learning-computer-network.git
+cd E-learning-computer-network
 ```
 
-2. 安装后端依赖
+2. Backend
 ```bash
-conda create -n test python=3.9 -y
-conda activate test
 cd backend
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
-pip install rank_bm25 jieba docx2txt httpx==0.27.2
+pip install rank_bm25 jieba docx2txt httpx
 ```
 
-3. 安装前端依赖
+3. Frontend
 ```bash
 cd frontend
 npm install
 ```
 
-4. 一键启动
+4. Configure (optional)
 ```bash
-bash start.sh
+cp .env.example .env
+# Edit .env with your API keys
 ```
 
-启动后访问 http://localhost:3000
+### Run
 
-### 手动启动
-
-后端（端口 8000）：
+Backend (port 8000):
 ```bash
-conda activate test
 cd backend
-python app.py
+source venv/bin/activate
+python3 app.py
 ```
 
-前端（端口 3000）：
+Frontend (port 3000):
 ```bash
 cd frontend
 npm start
 ```
 
-## API 接口
+Or use the startup script:
+```bash
+bash backend/start.sh  # starts backend
+cd frontend && npm start  # starts frontend in another terminal
+```
 
-| 接口 | 方法 | 说明 |
-|------|------|------|
-| /api/auth/register | POST | 用户注册 |
-| /api/auth/login | POST | 用户登录 |
-| /api/chat | POST | AI 对话（支持文件上传） |
-| /api/chat/history | GET | 获取聊天历史 |
-| /api/exercises/generate | POST | AI 生成习题 |
-| /api/exercises/submit | POST | 提交答案并评分 |
-| /api/exercises/history | GET | 练习记录查询 |
-| /api/exercises/stats | GET | 练习统计数据 |
-| /api/notes | GET/POST | 笔记查询/创建 |
-| /api/notes/:id | PUT/DELETE | 笔记编辑/删除 |
-| /api/videos | GET | 获取课程视频列表 |
-| /api/rag/search | POST | RAG 知识库搜索 |
+Visit http://localhost:3000
 
-## 截图
+## RAG Pipeline
 
-### 主要功能页面
-- 知识学习中心：课程视频、教科书阅读、分屏笔记
-- AI ChatBot：多模态问答，支持上传文件
-- 习题练习：AI 生成题目，自动评分
-- 练习记录：答题历史、正确率统计、章节分析
+```
+Document Ingestion:
+  Data/ (17 files) + User Uploads
+  → LangChain Loaders (PDF/DOCX/MD)
+  → RecursiveCharacterTextSplitter (1000 chars, 200 overlap)
+  → Dual indexing: ChromaDB (384-dim vectors) + BM25 (jieba tokenized)
+
+Query Time:
+  User Query → Query Expansion (CN-EN term mapping)
+  → Parallel retrieval:
+    Path A: Sentence-Transformers → ChromaDB cosine search → Top-K
+    Path B: jieba tokenize → BM25Okapi scoring → Top-K
+  → RRF Fusion: score = Σ 1/(60 + rank)
+  → Deduplicate by source → Top-3 contexts → LLM
+```
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| /api/auth/register | POST | User registration |
+| /api/auth/login | POST | User login |
+| /api/auth/refresh | POST | Refresh access token |
+| /api/chat | POST | AI chat (supports file upload) |
+| /api/chat/history | GET/DELETE | Chat history management |
+| /api/exercises/generate | POST | AI exercise generation |
+| /api/exercises/submit | POST | Submit answer & auto-grade |
+| /api/exercises/history | GET/DELETE | Exercise records |
+| /api/exercises/stats | GET | Practice statistics |
+| /api/notes | GET/POST | Notes query/create |
+| /api/notes/:id | PUT/DELETE | Notes edit/delete |
+| /api/videos | GET | Course video list |
+| /api/rag/search | POST | RAG knowledge base search |
+| /api/rag/stats | GET | RAG database statistics |

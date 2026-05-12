@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Layout, Menu, message } from 'antd';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import {
   BookOutlined,
   MessageOutlined,
@@ -17,9 +18,28 @@ import './DashboardPage.css';
 
 const { Header, Sider, Content } = Layout;
 
+const pathToKey = {
+  '/knowledge': 'knowledge',
+  '/exercises': 'exercises',
+  '/exercise-history': 'exercise-history',
+  '/chatbot': 'chatbot',
+  '/chat-history': 'history',
+};
+
+const keyToPath = {
+  'knowledge': '/knowledge',
+  'exercises': '/exercises',
+  'exercise-history': '/exercise-history',
+  'chatbot': '/chatbot',
+  'history': '/chat-history',
+};
+
 const DashboardPage = ({ user, onLogout }) => {
-  const [selectedMenu, setSelectedMenu] = useState('knowledge');
   const [collapsed, setCollapsed] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const selectedKey = pathToKey[location.pathname] || 'knowledge';
 
   const handleLogout = () => {
     localStorage.removeItem('access_token');
@@ -27,58 +47,17 @@ const DashboardPage = ({ user, onLogout }) => {
     localStorage.removeItem('user');
     message.success('已登出');
     onLogout();
+    navigate('/login');
   };
 
   const menuItems = [
-    {
-      key: 'knowledge',
-      icon: <BookOutlined />,
-      label: '知识学习',
-    },
-    {
-      key: 'exercises',
-      icon: <ThunderboltOutlined />,
-      label: '习题练习',
-    },
-    {
-      key: 'exercise-history',
-      icon: <SolutionOutlined />,
-      label: '练习记录',
-    },
-    {
-      key: 'chatbot',
-      icon: <MessageOutlined />,
-      label: 'ChatBot',
-    },
-    {
-      key: 'history',
-      icon: <HistoryOutlined />,
-      label: '历史记录',
-    },
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: '登出',
-      danger: true,
-    },
+    { key: 'knowledge', icon: <BookOutlined />, label: '知识学习' },
+    { key: 'exercises', icon: <ThunderboltOutlined />, label: '习题练习' },
+    { key: 'exercise-history', icon: <SolutionOutlined />, label: '练习记录' },
+    { key: 'chatbot', icon: <MessageOutlined />, label: 'ChatBot' },
+    { key: 'history', icon: <HistoryOutlined />, label: '历史记录' },
+    { key: 'logout', icon: <LogoutOutlined />, label: '登出', danger: true },
   ];
-
-  const renderContent = () => {
-    switch (selectedMenu) {
-      case 'knowledge':
-        return <KnowledgeLearning />;
-      case 'exercises':
-        return <ExercisePractice />;
-      case 'exercise-history':
-        return <ExerciseHistory />;
-      case 'chatbot':
-        return <ChatBot />;
-      case 'history':
-        return <ChatHistory />;
-      default:
-        return <KnowledgeLearning />;
-    }
-  };
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -94,13 +73,13 @@ const DashboardPage = ({ user, onLogout }) => {
         <Menu
           theme="light"
           mode="inline"
-          selectedKeys={[selectedMenu]}
+          selectedKeys={[selectedKey]}
           items={menuItems}
           onClick={(e) => {
             if (e.key === 'logout') {
               handleLogout();
             } else {
-              setSelectedMenu(e.key);
+              navigate(keyToPath[e.key]);
             }
           }}
         />
@@ -112,7 +91,14 @@ const DashboardPage = ({ user, onLogout }) => {
           </div>
         </Header>
         <Content className="content">
-          {renderContent()}
+          <Routes>
+            <Route path="/knowledge" element={<KnowledgeLearning />} />
+            <Route path="/exercises" element={<ExercisePractice />} />
+            <Route path="/exercise-history" element={<ExerciseHistory />} />
+            <Route path="/chatbot" element={<ChatBot />} />
+            <Route path="/chat-history" element={<ChatHistory />} />
+            <Route path="*" element={<Navigate to="/knowledge" replace />} />
+          </Routes>
         </Content>
       </Layout>
     </Layout>

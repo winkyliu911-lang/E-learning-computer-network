@@ -82,7 +82,7 @@ class Chat(db.Model):
     __tablename__ = 'chats'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     session_id = db.Column(db.String(64), index=True)
     question = db.Column(db.Text, nullable=False)
     answer = db.Column(db.Text)
@@ -106,8 +106,8 @@ class ExerciseRecord(db.Model):
     __tablename__ = 'exercise_records'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    chapter = db.Column(db.String(100))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    chapter = db.Column(db.String(100), index=True)
     question_type = db.Column(db.String(20))
     difficulty = db.Column(db.String(20))
     question = db.Column(db.Text, nullable=False)
@@ -146,7 +146,7 @@ class Note(db.Model):
     __tablename__ = 'notes'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     textbook_title = db.Column(db.String(255))
     title = db.Column(db.String(255), nullable=False)
     content = db.Column(db.Text, nullable=False)

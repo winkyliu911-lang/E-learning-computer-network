@@ -19,6 +19,7 @@ import {
   BulbOutlined,
   ThunderboltOutlined
 } from '@ant-design/icons';
+import { exerciseAPI } from '../api';
 import './ExercisePractice.css';
 
 const ExercisePractice = () => {
@@ -31,8 +32,7 @@ const ExercisePractice = () => {
   const [feedback, setFeedback] = useState(null);
   const [submitted, setSubmitted] = useState(false);
   const [exerciseHistory, setExerciseHistory] = useState([]);
-  const [generatedQuestionIds, setGeneratedQuestionIds] = useState(new Set()); // 追踪已生成的题目
-  // 知识库为服务端内置，前端不允许上传
+  const [generatedQuestions, setGeneratedQuestions] = useState([]);
 
   const chapters = [
     { label: '物理层', value: 'physical_layer' },
@@ -42,10 +42,6 @@ const ExercisePractice = () => {
     { label: '应用层', value: 'application_layer' }
   ];
 
-  // 获取用户 token
-  const getToken = () => localStorage.getItem('access_token');
-
-  // 生成新题目
   const generateExercise = async () => {
     if (!chapter) {
       message.warning('请先选择章节');
@@ -62,51 +58,34 @@ const ExercisePractice = () => {
       setUserAnswer('');
       setFeedback(null);
 
-      // 向后端发送已生成题目的历史，用于去重
-      const response = await fetch('http://localhost:8000/api/exercises/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getToken()}`
-        },
-        body: JSON.stringify({
-          chapter: chapter,
-          question_type: questionType,
-          difficulty: difficulty,
-          previous_questions: Array.from(generatedQuestionIds) // 传送已生成题目列表
-        })
+      const response = await exerciseAPI.generate({
+        chapter,
+        question_type: questionType,
+        difficulty,
+        previous_questions: generatedQuestions,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || '生成题目失败');
-      }
+      const data = response.data;
 
-      const data = await response.json();
-      
       if (!data.exercise) {
         throw new Error('响应数据格式错误：缺少 exercise 字段');
       }
-      
+
       setExercise(data.exercise);
-      
-      // 使用返回的哈希值来追踪这个题目（防止重复生成）
-      if (data.question_hash) {
-        setGeneratedQuestionIds(prev => new Set(prev).add(data.question_hash));
+
+      if (data.exercise.question) {
+        setGeneratedQuestions(prev => [...prev, data.exercise.question]);
       }
-      
-      message.success('✨ 题目已生成！');
+
+      message.success('题目已生成！');
     } catch (error) {
-      console.error('生成题目失败:', error);
-      message.error('生成题目失败: ' + error.message);
+      const errMsg = error?.response?.data?.error || error.message || '生成题目失败';
+      message.error('生成题目失败: ' + errMsg);
     } finally {
       setLoading(false);
     }
   };
 
-  // 知识库为服务端内置，前端无上传或初始化功能
-
-  // 提交答案
   const submitAnswer = async () => {
     if (!userAnswer.trim()) {
       message.warning('请输入或选择答案');
@@ -116,31 +95,20 @@ const ExercisePractice = () => {
     try {
       setLoading(true);
 
-      const response = await fetch('http://localhost:8000/api/exercises/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getToken()}`
-        },
-        body: JSON.stringify({
-          question: exercise.question,
-          question_type: questionType,
-          user_answer: userAnswer,
-          correct_answer: exercise.correct_answer,
-          chapter: chapter,
-          difficulty: difficulty,
-          options: exercise.options,
-          explanation: exercise.explanation,
-          key_points: exercise.key_points,
-          sample_answer: exercise.sample_answer,
-        })
+      const response = await exerciseAPI.submit({
+        question: exercise.question,
+        question_type: questionType,
+        user_answer: userAnswer,
+        correct_answer: exercise.correct_answer,
+        chapter: chapter,
+        difficulty: difficulty,
+        options: exercise.options,
+        explanation: exercise.explanation,
+        key_points: exercise.key_points,
+        sample_answer: exercise.sample_answer,
       });
 
-      if (!response.ok) {
-        throw new Error('提交答案失败');
-      }
-
-      const data = await response.json();
+      const data = response.data;
       setFeedback(data);
       setSubmitted(true);
 
@@ -158,10 +126,10 @@ const ExercisePractice = () => {
         }
       ]);
 
-      message.success('✅ 答案已提交，已生成反馈');
+      message.success('答案已提交，已生成反馈');
     } catch (error) {
-      console.error('提交答案失败:', error);
-      message.error('提交答案失败: ' + error.message);
+      const errMsg = error?.response?.data?.error || error.message || '提交答案失败';
+      message.error('提交答案失败: ' + errMsg);
     } finally {
       setLoading(false);
     }

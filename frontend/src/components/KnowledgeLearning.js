@@ -27,6 +27,7 @@ const KnowledgeLearning = () => {
   // Notes state (in PDF modal)
   const [noteTitle, setNoteTitle] = useState('');
   const [noteContent, setNoteContent] = useState('');
+  const [notePageNum, setNotePageNum] = useState('');
   const [bookNotes, setBookNotes] = useState([]);
   const [noteSaving, setNoteSaving] = useState(false);
 
@@ -38,7 +39,7 @@ const KnowledgeLearning = () => {
   const [editingNote, setEditingNote] = useState(null);
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
-
+  const [viewingNote, setViewingNote] = useState(null);
   const textbookLinks = [
     {
       id: 1,
@@ -101,6 +102,7 @@ const KnowledgeLearning = () => {
       setShowPdfModal(true);
       setNoteTitle('');
       setNoteContent('');
+      setNotePageNum('');
       fetchBookNotes(bookTitle);
     } else {
       window.open(fileUrl, '_blank');
@@ -118,10 +120,12 @@ const KnowledgeLearning = () => {
         textbook_title: currentBookTitle,
         title: noteTitle.trim(),
         content: noteContent.trim(),
+        page_number: notePageNum ? parseInt(notePageNum, 10) : null,
       });
       message.success('笔记已保存');
       setNoteTitle('');
       setNoteContent('');
+      setNotePageNum('');
       fetchBookNotes(currentBookTitle);
     } catch {
       message.error('保存失败');
@@ -265,9 +269,13 @@ const KnowledgeLearning = () => {
                       key={note.id}
                       className="note-card"
                       size="small"
+                      hoverable
+                      onClick={() => {
+                        if (editingNote !== note.id) setViewingNote(note);
+                      }}
                     >
                       {editingNote === note.id ? (
-                        <div className="note-edit-form">
+                        <div className="note-edit-form" onClick={(e) => e.stopPropagation()}>
                           <Input
                             value={editTitle}
                             onChange={(e) => setEditTitle(e.target.value)}
@@ -292,7 +300,7 @@ const KnowledgeLearning = () => {
                               <FileTextOutlined style={{ marginRight: 6, color: '#1890ff' }} />
                               {note.title}
                             </h4>
-                            <Space size={4}>
+                            <Space size={4} onClick={(e) => e.stopPropagation()}>
                               <Tooltip title="编辑">
                                 <Button
                                   type="text"
@@ -312,9 +320,14 @@ const KnowledgeLearning = () => {
                           </div>
                           <p className="note-card-content">{note.content}</p>
                           <div className="note-card-footer">
-                            {note.textbook_title && (
-                              <Tag color="blue" icon={<BookOutlined />}>{note.textbook_title.length > 15 ? note.textbook_title.slice(0, 15) + '...' : note.textbook_title}</Tag>
-                            )}
+                            <Space size={4}>
+                              {note.textbook_title && (
+                                <Tag color="blue" icon={<BookOutlined />}>{note.textbook_title.length > 15 ? note.textbook_title.slice(0, 15) + '...' : note.textbook_title}</Tag>
+                              )}
+                              {note.page_number && (
+                                <Tag color="green">第 {note.page_number} 页</Tag>
+                              )}
+                            </Space>
                             <span className="note-card-time">
                               <ClockCircleOutlined style={{ marginRight: 4 }} />
                               {formatTime(note.created_at)}
@@ -378,6 +391,15 @@ const KnowledgeLearning = () => {
                 onChange={(e) => setNoteTitle(e.target.value)}
                 style={{ marginBottom: 8 }}
               />
+              <Input
+                placeholder="关联页码（选填）"
+                value={notePageNum}
+                onChange={(e) => setNotePageNum(e.target.value.replace(/\D/g, ''))}
+                type="number"
+                min={1}
+                prefix={<BookOutlined />}
+                style={{ marginBottom: 8 }}
+              />
               <TextArea
                 placeholder="在这里记录你的学习笔记..."
                 value={noteContent}
@@ -414,7 +436,12 @@ const KnowledgeLearning = () => {
                       </Popconfirm>
                     </div>
                     <p className="note-item-content">{note.content}</p>
-                    <span className="note-item-time">{formatTime(note.created_at)}</span>
+                    <div className="note-item-footer">
+                      {note.page_number && (
+                        <Tag color="green" size="small">第 {note.page_number} 页</Tag>
+                      )}
+                      <span className="note-item-time">{formatTime(note.created_at)}</span>
+                    </div>
                   </div>
                 ))
               ) : (
@@ -423,6 +450,48 @@ const KnowledgeLearning = () => {
             </div>
           </div>
         </div>
+      </Modal>
+
+      {/* 笔记详情查看模态框 */}
+      <Modal
+        title={viewingNote?.title}
+        open={!!viewingNote}
+        onCancel={() => setViewingNote(null)}
+        footer={[
+          <Button key="close" onClick={() => setViewingNote(null)}>关闭</Button>,
+          <Button
+            key="edit"
+            type="primary"
+            icon={<EditOutlined />}
+            onClick={() => {
+              setEditingNote(viewingNote.id);
+              setEditTitle(viewingNote.title);
+              setEditContent(viewingNote.content);
+              setViewingNote(null);
+            }}
+          >
+            编辑
+          </Button>,
+        ]}
+        width={640}
+      >
+        {viewingNote && (
+          <div className="note-detail">
+            <div className="note-detail-meta">
+              {viewingNote.textbook_title && (
+                <Tag color="blue" icon={<BookOutlined />}>{viewingNote.textbook_title}</Tag>
+              )}
+              {viewingNote.page_number && (
+                <Tag color="green">第 {viewingNote.page_number} 页</Tag>
+              )}
+              <span className="note-detail-time">
+                <ClockCircleOutlined style={{ marginRight: 4 }} />
+                {formatTime(viewingNote.created_at)}
+              </span>
+            </div>
+            <div className="note-detail-content">{viewingNote.content}</div>
+          </div>
+        )}
       </Modal>
     </div>
   );

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card, Row, Col, Tag, Select, Button, Empty, Spin,
-  Statistic, message, Popconfirm, Collapse, Space, Tooltip,
+  Statistic, message, Popconfirm, Collapse, Space, Tooltip, Pagination,
 } from 'antd';
 import {
   CheckCircleFilled, CloseCircleFilled,
@@ -41,11 +41,14 @@ const ExerciseHistory = () => {
   const [filterChapter, setFilterChapter] = useState('');
   const [filterType, setFilterType] = useState('');
   const [filterCorrect, setFilterCorrect] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const pageSize = 20;
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const params = {};
+      const params = { page: currentPage, page_size: pageSize };
       if (filterChapter) params.chapter = filterChapter;
       if (filterType) params.question_type = filterType;
       if (filterCorrect !== '') params.is_correct = filterCorrect;
@@ -54,14 +57,16 @@ const ExerciseHistory = () => {
         exerciseAPI.getHistory(params),
         exerciseAPI.getStats(),
       ]);
-      setRecords(historyRes.data);
+      const historyData = historyRes.data;
+      setRecords(Array.isArray(historyData) ? historyData : (historyData.data || []));
+      setTotal(historyData.total || (Array.isArray(historyData) ? historyData.length : 0));
       setStats(statsRes.data);
     } catch (err) {
       message.error('获取练习记录失败');
     } finally {
       setLoading(false);
     }
-  }, [filterChapter, filterType, filterCorrect]);
+  }, [filterChapter, filterType, filterCorrect, currentPage]);
 
   useEffect(() => {
     fetchData();
@@ -288,7 +293,7 @@ const ExerciseHistory = () => {
               allowClear
               style={{ width: 150 }}
               value={filterChapter || undefined}
-              onChange={(v) => setFilterChapter(v || '')}
+              onChange={(v) => { setFilterChapter(v || ''); setCurrentPage(1); }}
             >
               {Object.entries(chapterMap).map(([k, v]) => (
                 <Option key={k} value={k}>{v}</Option>
@@ -299,7 +304,7 @@ const ExerciseHistory = () => {
               allowClear
               style={{ width: 120 }}
               value={filterType || undefined}
-              onChange={(v) => setFilterType(v || '')}
+              onChange={(v) => { setFilterType(v || ''); setCurrentPage(1); }}
             >
               <Option value="choice">选择题</Option>
               <Option value="short_answer">简答题</Option>
@@ -309,7 +314,7 @@ const ExerciseHistory = () => {
               allowClear
               style={{ width: 120 }}
               value={filterCorrect !== '' ? filterCorrect : undefined}
-              onChange={(v) => setFilterCorrect(v !== undefined ? v : '')}
+              onChange={(v) => { setFilterCorrect(v !== undefined ? v : ''); setCurrentPage(1); }}
             >
               <Option value="true">答对</Option>
               <Option value="false">答错</Option>
@@ -326,11 +331,25 @@ const ExerciseHistory = () => {
 
       <Spin spinning={loading}>
         {records.length > 0 ? (
-          <Collapse
-            className="records-collapse"
-            accordion
-            items={collapseItems}
-          />
+          <>
+            <Collapse
+              className="records-collapse"
+              accordion
+              items={collapseItems}
+            />
+            {total > pageSize && (
+              <div style={{ textAlign: 'center', marginTop: 16 }}>
+                <Pagination
+                  current={currentPage}
+                  pageSize={pageSize}
+                  total={total}
+                  onChange={(p) => setCurrentPage(p)}
+                  showTotal={(t) => `共 ${t} 条记录`}
+                  showSizeChanger={false}
+                />
+              </div>
+            )}
+          </>
         ) : (
           <Card className="empty-card">
             <Empty

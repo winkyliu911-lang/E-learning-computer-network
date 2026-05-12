@@ -160,6 +160,10 @@ export const ragAPI = {
 
 // 习题练习记录相关
 export const exerciseAPI = {
+  generate: (data) =>
+    api.post('/exercises/generate', data),
+  submit: (data) =>
+    api.post('/exercises/submit', data),
   getHistory: (params) =>
     api.get('/exercises/history', { params }),
   getStats: () =>

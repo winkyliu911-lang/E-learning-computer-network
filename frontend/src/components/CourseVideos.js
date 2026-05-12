@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Row, Col, Card, Button, Spin, message, Empty, Tag, Modal, Input, Space } from 'antd';
 import { PlayCircleOutlined, SearchOutlined, ReloadOutlined } from '@ant-design/icons';
 import { videoAPI } from '../api';
@@ -6,28 +6,25 @@ import './CourseVideos.css';
 
 const CourseVideos = () => {
   const [videos, setVideos] = useState([]);
-  const [filteredVideos, setFilteredVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const debounceTimer = useRef(null);
 
   useEffect(() => {
-    // 每次挂载时强制刷新课程数据，确保显示最新的课程
     fetchVideos();
-    
-    // 可选：设置定时刷新（每30秒检查一次新数据）
-    const refreshInterval = setInterval(() => {
-      fetchVideos();
-    }, 30000);
-    
-    return () => clearInterval(refreshInterval);
   }, []);
 
   useEffect(() => {
-    filterVideos();
-  }, [videos, selectedCategory, searchText]);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      setDebouncedSearch(searchText);
+    }, 300);
+    return () => clearTimeout(debounceTimer.current);
+  }, [searchText]);
 
   const fetchVideos = async () => {
     setLoading(true);
@@ -42,23 +39,20 @@ const CourseVideos = () => {
     }
   };
 
-  const filterVideos = () => {
+  const filteredVideos = useMemo(() => {
     let filtered = videos;
-
     if (selectedCategory) {
       filtered = filtered.filter((v) => v.category === selectedCategory);
     }
-
-    if (searchText) {
-      const lowerSearch = searchText.toLowerCase();
+    if (debouncedSearch) {
+      const lowerSearch = debouncedSearch.toLowerCase();
       filtered = filtered.filter((v) =>
         v.title.toLowerCase().includes(lowerSearch) ||
         v.description.toLowerCase().includes(lowerSearch)
       );
     }
-
-    setFilteredVideos(filtered);
-  };
+    return filtered;
+  }, [videos, selectedCategory, debouncedSearch]);
 
   const categories = [...new Set(videos.map((v) => v.category))].sort();
 

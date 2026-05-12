@@ -1,0 +1,38 @@
+[
+  {
+    "title": "《深入浅出计算机网络》",
+    "description": "用简单的语言描述复杂的问题，用形象生动的动画演示抽象的概念，用精美的文案给人视觉上的享受。让初学者更容易入门计算机网络。",
+    "category": "课本配套课程",
+    "video_url": "https://www.bilibili.com/video/BV1NT411g7n6"
+  },
+  {
+    "title": "王道计算机考研《计算机网络》",
+    "description": "王道计算机考研课程",
+    "category": "考研",
+    "video_url": "https://www.bilibili.com/video/BV19E411D78Q"
+  },
+  {
+    "title": "中科大郑烇、杨坚全套《计算机网络》",
+    "description": "在介绍计算机网络体系架构的基础上，自上而下、以互联网为例系统地阐述了网络体系结构各层次的主要服务、工作原理、常用技术和协议。",
+    "category": "高校课程",
+    "video_url": "https://www.bilibili.com/video/BV1JV411t7ow"
+  },
+  {
+    "title": "《计算机网络，自顶向下方法》配套课程",
+    "description": "课本配套课程，作者亲授深入讲解计算机网络各个知识点。",
+    "category": "课本配套课程",
+    "video_url": "https://www.bilibili.com/video/BV1mb4y1d7K7"
+  },
+  {
+    "title": "谢希仁《计算机网络》课本指定配套微课",
+    "description": "根据谢希仁《计算机网络》教材内容制作的配套微课程，深入讲解教材核心知识点。",
+    "category": "课本配套课程",
+    "video_url": "https://www.bilibili.com/video/BV1LF41177V7"
+  },
+  {
+    "title": "408考研《计算机网络》强化复习",
+    "description": "针对全国计算机考研408统考的计算机网络强化复习课程，帮助考生突破重难点。",
+    "category": "考研",
+    "video_url": "https://www.bilibili.com/video/BV1XHs3zPEuW"
+  }
+]

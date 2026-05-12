@@ -6,11 +6,14 @@ RAG Manager - 管理 RAG 系统的核心类
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import math
 import pickle
 import re
+import time
 import uuid
+from collections import OrderedDict
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
@@ -147,6 +150,39 @@ def _expand_query(query: str) -> str:
     return expanded
 
 
+class _LRUCache:
+    """带 TTL 的 LRU 缓存，用于 RAG 检索结果缓存"""
+
+    def __init__(self, maxsize: int = 128, ttl: int = 300):
+        self._cache: OrderedDict = OrderedDict()
+        self._maxsize = maxsize
+        self._ttl = ttl
+
+    def _make_key(self, *args) -> str:
+        raw = "|".join(str(a) for a in args)
+        return hashlib.md5(raw.encode()).hexdigest()
+
+    def get(self, *args):
+        key = self._make_key(*args)
+        if key in self._cache:
+            entry = self._cache[key]
+            if time.time() - entry["ts"] < self._ttl:
+                self._cache.move_to_end(key)
+                return entry["val"]
+            del self._cache[key]
+        return None
+
+    def put(self, val, *args):
+        key = self._make_key(*args)
+        self._cache[key] = {"val": val, "ts": time.time()}
+        self._cache.move_to_end(key)
+        if len(self._cache) > self._maxsize:
+            self._cache.popitem(last=False)
+
+    def invalidate(self):
+        self._cache.clear()
+
+
 # =========================
 # Embeddings 统一封装
 # =========================
@@ -226,8 +262,12 @@ class RAGManager:
         self._bm25_index: Optional[Any] = None
         self._bm25_texts: List[str] = []
         self._bm25_metadatas: List[dict] = []
+        self._bm25_corpus_tokens: List[List[str]] = []
         self._bm25_pickle_path = str(Path(vector_db_path) / "bm25_index.pkl")
         self._load_or_build_bm25()
+
+        # 检索结果缓存 (maxsize=128, ttl=300秒)
+        self._query_cache = _LRUCache(maxsize=128, ttl=300)
 
         logger.info(f"RAG Manager 初始化完成，向量库路径: {vector_db_path}")
 
@@ -287,6 +327,7 @@ class RAGManager:
                 self._bm25_metadatas = data["metadatas"]
                 corpus_tokens = data["corpus_tokens"]
                 if corpus_tokens:
+                    self._bm25_corpus_tokens = corpus_tokens
                     self._bm25_index = BM25Okapi(corpus_tokens)
                     logger.info(f"BM25 索引从缓存加载（{len(self._bm25_texts)} 个文本块）")
                     return
@@ -320,6 +361,7 @@ class RAGManager:
             self._bm25_texts = all_texts
             self._bm25_metadatas = all_metadatas
             corpus_tokens = [_tokenize(t) for t in all_texts]
+            self._bm25_corpus_tokens = corpus_tokens
             self._bm25_index = BM25Okapi(corpus_tokens)
             self._save_bm25_pickle(corpus_tokens)
             logger.info(f"BM25 索引已从 ChromaDB 重建（{len(all_texts)} 个文本块）")
@@ -331,13 +373,14 @@ class RAGManager:
             return
         new_texts = [c.page_content if hasattr(c, "page_content") else str(c) for c in chunks]
         new_metas = [c.metadata if hasattr(c, "metadata") else {} for c in chunks]
+        new_tokens = [_tokenize(t) for t in new_texts]
         self._bm25_texts.extend(new_texts)
         self._bm25_metadatas.extend(new_metas)
-        corpus_tokens = [_tokenize(t) for t in self._bm25_texts]
-        if corpus_tokens:
-            self._bm25_index = BM25Okapi(corpus_tokens)
-            self._save_bm25_pickle(corpus_tokens)
-            logger.info(f"BM25 索引已更新（共 {len(self._bm25_texts)} 个文本块）")
+        self._bm25_corpus_tokens.extend(new_tokens)
+        if self._bm25_corpus_tokens:
+            self._bm25_index = BM25Okapi(self._bm25_corpus_tokens)
+            self._save_bm25_pickle(self._bm25_corpus_tokens)
+            logger.info(f"BM25 索引增量更新（新增 {len(new_texts)} 块，共 {len(self._bm25_texts)} 块）")
 
     def _save_bm25_pickle(self, corpus_tokens: List[List[str]]):
         try:
@@ -489,6 +532,7 @@ class RAGManager:
             self.vectorstore.add_documents(chunks)
             self._persist()
             self._update_bm25_with_chunks(chunks)
+            self._query_cache.invalidate()
             total_chunks = len(chunks)
             logger.info(f"添加 {total_chunks} 个文本块到向量存储")
 
@@ -507,6 +551,11 @@ class RAGManager:
 
     def query(self, query: str, top_k: int = 5, score_threshold: float = 0.3,
               mode: str = 'hybrid') -> List[Dict[str, Any]]:
+        cached = self._query_cache.get(query, top_k, score_threshold, mode)
+        if cached is not None:
+            logger.debug(f"缓存命中: query='{query[:30]}...' mode={mode}")
+            return cached
+
         try:
             if mode == 'bm25':
                 results = self._bm25_search(query, k=top_k)
@@ -536,6 +585,7 @@ class RAGManager:
                     "source": source,
                     "similarity_score": sim,
                 })
+            self._query_cache.put(out, query, top_k, score_threshold, mode)
             return out
         except Exception as e:
             logger.error(f"query 失败: {e}")
@@ -552,6 +602,8 @@ class RAGManager:
             self._bm25_index = None
             self._bm25_texts = []
             self._bm25_metadatas = []
+            self._bm25_corpus_tokens = []
+            self._query_cache.invalidate()
             pkl = Path(self._bm25_pickle_path)
             if pkl.exists():
                 pkl.unlink()
